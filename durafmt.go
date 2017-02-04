@@ -9,7 +9,8 @@ import (
 )
 
 var (
-	units = []string{"years", "months", "weeks", "days", "hours", "minutes", "seconds"}
+	units      = []string{"years", "months", "weeks", "days", "hours", "minutes", "seconds"}
+	shortUnits = []string{"y", "M", "w", "d", "h", "m", "s"}
 )
 
 // Durafmt holds the parsed duration and the original input duration.
@@ -86,6 +87,65 @@ func (d *Durafmt) String() string {
 			// check for suffix in input string and add the key.
 			if strings.HasSuffix(d.input, string(k[0])) {
 				duration += strval + " " + k
+			}
+			break
+		// omit any value with 0.
+		case v == 0:
+			continue
+		}
+	}
+	// trim any remaining spaces.
+	duration = strings.TrimSpace(duration)
+	return duration
+}
+
+// Short parses d *Durafmt into a human readable duration using short units.
+func (d *Durafmt) Short() string {
+	var duration string
+
+	// Check for minus durations.
+	if string(d.input[0]) == "-" {
+		duration += "-"
+		d.duration = -d.duration
+	}
+
+	// Convert duration.
+	seconds := int(d.duration.Seconds()) % 60
+	minutes := int(d.duration.Minutes()) % 60
+	hours := int(d.duration.Hours())
+	days := (hours / 24)
+	weeks := (days / 7)
+	months := (weeks / 4)
+	years := (months / 12)
+
+	// Create a map of the converted duration time.
+	convMap := map[string]int{
+		"s": seconds,
+		"m": minutes,
+		"h": hours % 24,
+		"d": days % 7,
+		"w": weeks % 4,
+		"M": months % 12,
+		"y": years,
+	}
+
+	// Construct short duration string.
+	for _, k := range shortUnits {
+		v := convMap[k]
+		strval := strconv.Itoa(v)
+		switch {
+		// add to the duration string if v >= 1.
+		case v >= 1:
+			duration += strval + k + " "
+		// omit any value with 0s or 0.
+		case d.duration.String() == "0" || d.duration.String() == "0s":
+			// disallow months.
+			if k == "M" {
+				continue
+			}
+			// check for suffix in input string and add the key.
+			if strings.HasSuffix(d.input, string(k[0])) {
+				duration += strval + k
 			}
 			break
 		// omit any value with 0.

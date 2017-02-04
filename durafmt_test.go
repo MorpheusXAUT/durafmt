@@ -107,6 +107,66 @@ func TestParseString(t *testing.T) {
 	}
 }
 
+// TestParseStringShort for durafmt duration short string conversion.
+func TestParseStringShort(t *testing.T) {
+	testStrings = []struct {
+		test     string
+		expected string
+	}{
+		{"1s", "1s"},
+		{"1m", "1m"},
+		{"2m", "2m"},
+		{"1h", "1h"},
+		{"10h", "10h"},
+		{"24h", "1d"},
+		{"48h", "2d"},
+		{"120h", "5d"},
+		{"168h", "1w"},
+		{"672h", "1M"},
+		{"8064h", "1y"},
+		{"1m0s", "1m"},
+		{"1m2s", "1m 2s"},
+		{"3h4m5s", "3h 4m 5s"},
+		{"0s", "0s"},
+		{"0m", "0m"},
+		{"0h", "0h"},
+		{"0m2s", "2s"},
+		{"0m2m", "2m"},
+		{"0m2m3h", "3h 2m"},
+		{"0m2m34h", "1d 10h 2m"},
+		{"-1s", "-1s"},
+		{"-1m", "-1m"},
+		{"-2m", "-2m"},
+		{"-1h", "-1h"},
+		{"-10h", "-10h"},
+		{"-24h", "-1d"},
+		{"-48h", "-2d"},
+		{"-120h", "-5d"},
+		{"-168h", "-1w"},
+		{"-672h", "-1M"},
+		{"-8064h", "-1y"},
+		{"-1m0s", "-1m"},
+		{"-0m2s", "-2s"},
+		{"-0m2m", "-2m"},
+		{"-0m2m3h", "-3h 2m"},
+		{"-0m2m34h", "-1d 10h 2m"},
+		{"-0s", "-0s"},
+		{"-0m", "-0m"},
+		{"-0h", "-0h"},
+	}
+
+	for _, table := range testStrings {
+		d, err := ParseString(table.test)
+		if err != nil {
+			t.Errorf("%q", err)
+		}
+		result := d.Short()
+		if result != table.expected {
+			t.Errorf("d.Short() = %q. got %q, expected %q", table.test, result, table.expected)
+		}
+	}
+}
+
 // TestInvalidDuration for invalid inputs.
 func TestInvalidDuration(t *testing.T) {
 	testStrings = []struct {
